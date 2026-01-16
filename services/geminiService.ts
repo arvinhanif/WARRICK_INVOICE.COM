@@ -1,9 +1,19 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+// Standard practice for handling the API key in a secure yet static-friendly way
+const getApiKey = () => {
+  return process.env.API_KEY || '';
+};
 
 export const parseNaturalLanguageInvoice = async (prompt: string) => {
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    console.warn("Gemini API Key missing. Natural language features will be unavailable.");
+    return {};
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
     contents: `Extract invoice information from this text: "${prompt}". 
@@ -38,6 +48,10 @@ export const parseNaturalLanguageInvoice = async (prompt: string) => {
 };
 
 export const generateProfessionalTerms = async (businessType: string) => {
+  const apiKey = getApiKey();
+  if (!apiKey) return "Professional terms generation requires an API Key.";
+
+  const ai = new GoogleGenAI({ apiKey });
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
     contents: `Generate professional invoice payment terms and notes for a ${businessType} business. Keep it concise, polite, and iOS-style (modern/minimal).`,

@@ -1,42 +1,34 @@
 
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
-import Dashboard from './pages/Dashboard.tsx';
-import CreateInvoice from './pages/CreateInvoice.tsx';
-import Settings from './pages/Settings.tsx';
-import PreviewInvoice from './pages/PreviewInvoice.tsx';
-import Customers from './pages/Customers.tsx';
-import Products from './pages/Products.tsx';
-import Settlement from './pages/Settlement.tsx';
-import Login from './pages/Login.tsx';
-import Navbar from './components/Navbar.tsx';
-import { InvoiceData, BusinessInfo, Customer, Product, AuthUser } from './types.ts';
+import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
+import Dashboard from './pages/Dashboard';
+import CreateInvoice from './pages/CreateInvoice';
+import Settings from './pages/Settings';
+import PreviewInvoice from './pages/PreviewInvoice';
+import Customers from './pages/Customers';
+import Products from './pages/Products';
+import Settlement from './pages/Settlement';
+import Login from './pages/Login';
+import Navbar from './components/Navbar';
+import { InvoiceData, BusinessInfo, Customer, Product, AuthUser } from './types';
 
 const App: React.FC = () => {
-  const navigate = useNavigate();
-  
-  const getSafeJSON = (key: string, defaultValue: any) => {
-    try {
-      const saved = localStorage.getItem(key);
-      return saved ? JSON.parse(saved) : defaultValue;
-    } catch (e) {
-      console.error(`Error loading ${key}`, e);
-      return defaultValue;
-    }
-  };
-
   const [darkMode, setDarkMode] = useState<boolean>(() => {
-    return localStorage.getItem('warrick_dark_mode') === 'true';
+    const saved = localStorage.getItem('warrick_dark_mode');
+    return saved === 'true';
   });
 
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => {
-    return getSafeJSON('warrick_auth', null);
+    const saved = localStorage.getItem('warrick_auth');
+    return saved ? JSON.parse(saved) : null;
   });
 
   const [searchQuery, setSearchQuery] = useState('');
 
   const [users, setUsers] = useState<AuthUser[]>(() => {
-    return getSafeJSON('warrick_app_users', [{
+    const saved = localStorage.getItem('warrick_app_users');
+    if (saved) return JSON.parse(saved);
+    return [{
       id: 'admin-01',
       role: 'Admin',
       name: 'Arvin Hanif',
@@ -44,28 +36,32 @@ const App: React.FC = () => {
       password: 'arvin_hanif',
       mobile: '01XXXXXXXXX',
       email: 'arvin@warrick.io'
-    }]);
+    }];
   });
 
   const [userBusiness, setUserBusiness] = useState<BusinessInfo>(() => {
-    return getSafeJSON('warrick_business', {
+    const saved = localStorage.getItem('warrick_business');
+    return saved ? JSON.parse(saved) : {
       name: 'Warrick Studios',
       email: 'billing@warrick.io',
       phone: '+880 1XXX-XXXXXX',
       address: 'Gulshan, Dhaka, Bangladesh'
-    });
+    };
   });
 
   const [invoices, setInvoices] = useState<InvoiceData[]>(() => {
-    return getSafeJSON('warrick_invoices', []);
+    const saved = localStorage.getItem('warrick_invoices');
+    return saved ? JSON.parse(saved) : [];
   });
 
   const [customers, setCustomers] = useState<Customer[]>(() => {
-    return getSafeJSON('warrick_customers', []);
+    const saved = localStorage.getItem('warrick_customers');
+    return saved ? JSON.parse(saved) : [];
   });
 
   const [products, setProducts] = useState<Product[]>(() => {
-    return getSafeJSON('warrick_products', []);
+    const saved = localStorage.getItem('warrick_products');
+    return saved ? JSON.parse(saved) : [];
   });
 
   const [invoiceCounter, setInvoiceCounter] = useState<number>(() => {
@@ -83,38 +79,44 @@ const App: React.FC = () => {
   }, [darkMode]);
 
   useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.altKey) {
-        switch (e.key.toLowerCase()) {
-          case 'n': navigate('/create'); break;
-          case 'd': navigate('/dashboard'); break;
-          case 's': navigate('/settings'); break;
-          case 'c': navigate('/customers'); break;
-          case 'p': navigate('/products'); break;
-          case 't': navigate('/settlement'); break;
-          default: break;
-        }
-      }
-    };
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [navigate]);
+    localStorage.setItem('warrick_app_users', JSON.stringify(users));
+  }, [users]);
 
-  useEffect(() => { localStorage.setItem('warrick_app_users', JSON.stringify(users)); }, [users]);
-  useEffect(() => { 
-    if (currentUser) localStorage.setItem('warrick_auth', JSON.stringify(currentUser));
-    else localStorage.removeItem('warrick_auth');
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem('warrick_auth', JSON.stringify(currentUser));
+    } else {
+      localStorage.removeItem('warrick_auth');
+    }
   }, [currentUser]);
-  useEffect(() => { localStorage.setItem('warrick_business', JSON.stringify(userBusiness)); }, [userBusiness]);
-  useEffect(() => { localStorage.setItem('warrick_invoices', JSON.stringify(invoices)); }, [invoices]);
-  useEffect(() => { localStorage.setItem('warrick_customers', JSON.stringify(customers)); }, [customers]);
-  useEffect(() => { localStorage.setItem('warrick_products', JSON.stringify(products)); }, [products]);
-  useEffect(() => { localStorage.setItem('warrick_invoice_counter', invoiceCounter.toString()); }, [invoiceCounter]);
+
+  useEffect(() => {
+    localStorage.setItem('warrick_business', JSON.stringify(userBusiness));
+  }, [userBusiness]);
+
+  useEffect(() => {
+    localStorage.setItem('warrick_invoices', JSON.stringify(invoices));
+  }, [invoices]);
+
+  useEffect(() => {
+    localStorage.setItem('warrick_customers', JSON.stringify(customers));
+  }, [customers]);
+
+  useEffect(() => {
+    localStorage.setItem('warrick_products', JSON.stringify(products));
+  }, [products]);
+
+  useEffect(() => {
+    localStorage.setItem('warrick_invoice_counter', invoiceCounter.toString());
+  }, [invoiceCounter]);
 
   const addInvoice = (invoice: InvoiceData) => {
     const nextNumber = invoiceCounter + 1;
     const formattedNumber = `#${nextNumber.toString().padStart(4, '0')}`;
-    const finalInvoice = { ...invoice, invoiceNumber: formattedNumber };
+    const finalInvoice = {
+      ...invoice,
+      invoiceNumber: formattedNumber
+    };
     setInvoices(prev => [finalInvoice, ...prev]);
     setInvoiceCounter(nextNumber);
   };
@@ -129,6 +131,24 @@ const App: React.FC = () => {
     }
   };
 
+  const updateBusiness = (info: BusinessInfo) => {
+    setUserBusiness(info);
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+  };
+
+  const handleDeleteUser = (id: string) => {
+    if (window.confirm('Remove this staff member?')) {
+      setUsers(prev => prev.filter(u => u.id !== id));
+    }
+  };
+
+  const handleUpdateUser = (updatedUser: AuthUser) => {
+    setUsers(prev => prev.map(u => u.id === updatedUser.id ? updatedUser : u));
+  };
+
   if (!currentUser) {
     return <Login onLogin={setCurrentUser} users={users} />;
   }
@@ -136,7 +156,7 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen pb-20 md:pb-12 transition-colors duration-500">
       <Navbar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
-      <div className="max-w-[1400px] mx-auto px-6 sm:px-10 lg:px-12 py-10">
+      <div className="max-w-[1200px] mx-auto px-6 sm:px-8 lg:px-10 py-8">
         <Routes>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard invoices={invoices} onDelete={deleteInvoice} customersCount={customers.length} globalSearchQuery={searchQuery} user={currentUser} />} />
@@ -146,15 +166,15 @@ const App: React.FC = () => {
           <Route path="/settings" element={
             <Settings 
               business={userBusiness} 
-              onUpdate={setUserBusiness} 
-              onLogout={() => setCurrentUser(null)} 
+              onUpdate={updateBusiness} 
+              onLogout={handleLogout} 
               user={currentUser} 
               onRegisterUser={(u) => setUsers(p => [...p, u])} 
               users={users} 
               darkMode={darkMode}
               onToggleDark={() => setDarkMode(!darkMode)}
-              onDeleteUser={(id) => setUsers(prev => prev.filter(u => u.id !== id))}
-              onUpdateUser={(updatedUser) => setUsers(prev => prev.map(u => u.id === updatedUser.id ? updatedUser : u))}
+              onDeleteUser={handleDeleteUser}
+              onUpdateUser={handleUpdateUser}
             />
           } />
           <Route path="/customers" element={<Customers customers={customers} onAdd={(c) => setCustomers(p => [c, ...p])} onUpdate={(c) => setCustomers(p => p.map(x => x.id === c.id ? c : x))} onDelete={(id) => setCustomers(p => p.filter(x => x.id !== id))} globalSearchQuery={searchQuery} user={currentUser} />} />

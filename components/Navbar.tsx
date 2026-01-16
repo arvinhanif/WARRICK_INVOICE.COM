@@ -8,7 +8,7 @@ interface NavbarProps {
 }
 
 const Navbar: React.FC<NavbarProps> = ({ searchQuery, setSearchQuery }) => {
-  const navigate = useNavigate();
+  const navigate = useRef(useNavigate()).current;
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [showHistory, setShowHistory] = useState(false);
   const historyRef = useRef<HTMLDivElement>(null);
@@ -23,10 +23,8 @@ const Navbar: React.FC<NavbarProps> = ({ searchQuery, setSearchQuery }) => {
   ];
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('warrick_recent_searches');
-      if (saved) setRecentSearches(JSON.parse(saved));
-    } catch (e) {}
+    const saved = localStorage.getItem('warrick_recent_searches');
+    if (saved) setRecentSearches(JSON.parse(saved));
 
     const handleClickOutside = (event: MouseEvent) => {
       if (historyRef.current && !historyRef.current.contains(event.target as Node)) {
@@ -52,6 +50,7 @@ const Navbar: React.FC<NavbarProps> = ({ searchQuery, setSearchQuery }) => {
       saveSearch(searchQuery);
       setShowHistory(false);
       inputRef.current?.blur();
+      // Navigate to dashboard to show results if not already there
       navigate('/dashboard');
     }
     if (e.key === 'Escape') {
