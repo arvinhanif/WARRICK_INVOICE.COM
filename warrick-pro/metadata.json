@@ -1,0 +1,10 @@
+{
+  "name": "WARRICK PRO",
+  "short_name": "WARRICK",
+  "description": "Enterprise-grade iOS-inspired invoice generation platform optimized for desktop.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#F0F2F5",
+  "theme_color": "#6366F1",
+  "requestFramePermissions": []
+}
